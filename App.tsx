@@ -55,6 +55,7 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
     const [persona, setPersona] = useState('');
     const [emotion, setEmotion] = useState('');
     const [tone, setTone] = useState('');
+    const [environment, setEnvironment] = useState('');
     const [characters, setCharacters] = useState<Character[]>([
         { id: `char-${crypto.randomUUID()}`, name: '', persona: '' },
         { id: `char-${crypto.randomUUID()}`, name: '', persona: '' },
@@ -89,7 +90,7 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
         
         let request: PromptRequest;
         if (speechType === SpeechType.NARRATION) {
-            request = { type: SpeechType.NARRATION, scenario, persona, emotion, tone };
+            request = { type: SpeechType.NARRATION, scenario, persona, emotion, tone, environment };
         } else {
              const finalCharacters = characters.filter(c => c.name.trim() !== '' && c.persona.trim() !== '');
              if (finalCharacters.length === 0) {
@@ -133,6 +134,7 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
             setPersona(details.persona);
             setEmotion(details.emotion);
             setTone(details.tone);
+            setEnvironment(details.environment);
         } catch (e: any) {
             setError(e.message || T.errorSuggestion);
         } finally {
@@ -192,12 +194,18 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
                 <div className="space-y-4">
                     <textarea placeholder={T.personaPlaceholder} value={persona} onChange={e => setPersona(e.target.value)} rows={2} className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition" />
                     <textarea placeholder={T.emotionPlaceholder} value={emotion} onChange={e => setEmotion(e.target.value)} rows={2} className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition" />
-                    <div className="flex items-center space-x-2">
-                      <textarea placeholder={T.tonePlaceholder} value={tone} onChange={e => setTone(e.target.value)} rows={2} className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition" />
-                      <button onClick={handleDetailsSuggestion} disabled={isSuggesting === 'details' || !scenario} className="flex-shrink-0 p-2 rounded-lg text-gray-400 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 transition-colors">
-                          {isSuggesting === 'details' ? <RefreshIcon className="w-5 h-5 animate-spin text-teal-500" /> : <SparklesIcon className="w-5 h-5" />}
-                      </button>
-                    </div>
+                    <textarea placeholder={T.narratorEnvironmentPlaceholder} value={environment} onChange={e => setEnvironment(e.target.value)} rows={2} className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition" />
+                    <textarea placeholder={T.tonePlaceholder} value={tone} onChange={e => setTone(e.target.value)} rows={2} className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition" />
+                </div>
+                <div className="flex justify-end mt-4">
+                    <button 
+                        onClick={handleDetailsSuggestion} 
+                        disabled={isSuggesting === 'details' || !scenario} 
+                        className="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-300 bg-gray-700/50 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        {isSuggesting === 'details' ? <RefreshIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
+                        <span>{isSuggesting === 'details' ? T.suggesting : T.suggestion}</span>
+                    </button>
                 </div>
             </fieldset>
         </>

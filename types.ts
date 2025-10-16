@@ -25,6 +25,7 @@ export interface NarrationRequest {
   persona: string;
   emotion: string;
   tone: string;
+  environment: string;
 }
 
 export interface DialogueRequest {

@@ -14,9 +14,10 @@ const NARRATION_SCHEMA = {
     content: { type: Type.STRING, description: "The full text of the narration." },
     emotion: { type: Type.STRING, description: "The primary emotion to convey (e.g., 'Sad', 'Joyful', 'Tense')." },
     tones: { type: Type.ARRAY, items: { type: Type.STRING }, description: "A list of vocal tones or styles (e.g., 'Whispering', 'Booming', 'Fast-paced')." },
+    environment: { type: Type.STRING, description: "The physical setting or acoustic environment for the narration (e.g., 'In a vast cave', 'Small room', 'Outdoors in a storm')." },
     integrated_text: {type: Type.STRING, description: "A single string combining all elements into a comprehensive prompt for a text-to-speech engine, formatted for readability."}
   },
-  required: ["type", "scenario", "persona", "content", "emotion", "tones", "integrated_text"],
+  required: ["type", "scenario", "persona", "content", "emotion", "tones", "environment", "integrated_text"],
 };
 
 const DIALOGUE_SCHEMA = {
@@ -67,7 +68,8 @@ export const generatePrompt = async (request: PromptRequest): Promise<GeneratedP
       - Narrator's Persona: ${r.persona}
       - Primary Emotion: ${r.emotion}
       - Vocal Tones: ${r.tone}
-      The narration should be descriptive, immersive, and set a clear mood based on these details.`;
+      - Environment: ${r.environment}
+      The narration should be descriptive, immersive, and set a clear mood based on these details. The environment should influence the tone and description.`;
     schema = NARRATION_SCHEMA;
   } else {
     const r = request as DialogueRequest;
@@ -155,21 +157,22 @@ const NARRATOR_DETAILS_SCHEMA = {
         persona: { type: Type.STRING, description: "A suitable persona for the narrator (e.g., 'Tired traveler', 'Excited scientist')." },
         emotion: { type: Type.STRING, description: "The primary emotion the narrator should convey (e.g., 'Sadness', 'Wonder')." },
         tone: { type: Type.STRING, description: "The vocal tone or style of the narration (e.g., 'Whispering tone', 'Booming voice')." },
+        environment: { type: Type.STRING, description: "The physical acoustic environment for the narration (e.g., 'In a vast cave', 'Outdoors in a storm')." },
     },
-    required: ["persona", "emotion", "tone"],
+    required: ["persona", "emotion", "tone", "environment"],
 };
 
-export const generateNarratorDetailsSuggestion = async (scenario: string, lang: Language): Promise<{ persona: string; emotion: string; tone: string; }> => {
+export const generateNarratorDetailsSuggestion = async (scenario: string, lang: Language): Promise<{ persona: string; emotion: string; tone: string; environment: string; }> => {
     try {
         const prompt = lang === 'ko'
           ? `다음 나레이션 시나리오를 보고, 이상적인 나레이터 정보를 제안해주세요.
             시나리오: "${scenario}"
             
-            적절한 페르소나, 주요 감정, 그리고 구체적인 목소리 톤을 제공해주세요.`
+            적절한 페르소나, 주요 감정, 구체적인 목소리 톤, 그리고 어울리는 음향 환경을 제공해주세요.`
           : `Based on the following narration scenario, suggest the ideal narrator details.
             Scenario: "${scenario}"
             
-            Provide an appropriate persona, primary emotion, and a specific vocal tone.`;
+            Provide an appropriate persona, primary emotion, a specific vocal tone, and a suitable acoustic environment.`;
 
         const response = await ai.models.generateContent({
             model: "gemini-2.5-pro",

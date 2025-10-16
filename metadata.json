@@ -1,0 +1,5 @@
+{
+  "name": "Gemini Speech Generator",
+  "description": "An application to generate realistic and immersive speech prompts for narration, one-on-one, and multi-person dialogues in a cosplay style, providing both JSON and integrated text formats.",
+  "requestFramePermissions": []
+}

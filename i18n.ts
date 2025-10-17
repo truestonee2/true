@@ -54,6 +54,8 @@ export const UI_TEXT = {
     scriptEditor: "Script Editor",
     imageTouchSuggestion: "AI Image Touch Suggestion",
     imageTouchPlaceholder: "AI suggestions for cosplay performance will appear here...",
+    targetDuration: "Target Duration (seconds)",
+    targetDurationPlaceholder: "Optional, e.g., 30",
   },
   ko: {
     title: "AI 성우 프롬프트 생성기",
@@ -107,5 +109,7 @@ export const UI_TEXT = {
     scriptEditor: "대본 편집기",
     imageTouchSuggestion: "AI 이미지 터치 제안",
     imageTouchPlaceholder: "코스프레 연기를 위한 AI 제안이 여기에 표시됩니다...",
+    targetDuration: "목표 시간 (초)",
+    targetDurationPlaceholder: "선택사항, 예: 30",
   },
 };

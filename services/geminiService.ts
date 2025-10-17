@@ -59,6 +59,15 @@ const SYSTEM_INSTRUCTION = `You are a master scriptwriter for 'cosplay' style vo
 export const generatePrompt = async (request: PromptRequest): Promise<GeneratedPrompt> => {
   let userPrompt: string;
   let schema: object;
+  
+  const durationConstraint = (duration: string | undefined): string => {
+    if (!duration) return '';
+    const parsedDuration = parseInt(duration, 10);
+    if (!isNaN(parsedDuration) && parsedDuration > 0) {
+        return `\n- The total length should be approximately ${parsedDuration} seconds.`;
+    }
+    return '';
+  };
 
   if (request.type === SpeechType.NARRATION) {
     const r = request as NarrationRequest;
@@ -69,7 +78,7 @@ export const generatePrompt = async (request: PromptRequest): Promise<GeneratedP
       - Primary Emotion: ${r.emotion}
       - Vocal Tones: ${r.tone}
       - Environment: ${r.environment}
-      The narration should be descriptive, immersive, and set a clear mood based on these details. The environment should influence the tone and description.`;
+      The narration should be descriptive, immersive, and set a clear mood based on these details. The environment should influence the tone and description.${durationConstraint(r.duration)}`;
     schema = NARRATION_SCHEMA;
   } else {
     const r = request as DialogueRequest;
@@ -95,14 +104,14 @@ export const generatePrompt = async (request: PromptRequest): Promise<GeneratedP
           
           Your task is to take the provided script and format it perfectly into the required JSON structure.
           Refine the emotion and tone descriptions to be more evocative and detailed where appropriate, but strictly adhere to the dialogue lines and character assignments from the script.
-          The 'integrated_text' should be a clean, readable script format of the final dialogue.`;
+          The 'integrated_text' should be a clean, readable script format of the final dialogue.${durationConstraint(r.duration)}`;
     } else {
         userPrompt = `
           Generate a speech prompt for a dialogue.
           - Scenario: ${r.scenario}
           - Characters:\n${characterDescriptions}
           The dialogue should be dramatic and engaging. Each line in the script must have a specified character, the line of dialogue, a primary emotion, and a specific tone/direction.
-          Generate a complete script from scratch based on the scenario and characters provided.`;
+          Generate a complete script from scratch based on the scenario and characters provided.${durationConstraint(r.duration)}`;
     }
     schema = DIALOGUE_SCHEMA;
   }

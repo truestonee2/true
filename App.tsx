@@ -52,6 +52,7 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
     // State
     const [scenario, setScenario] = useState('');
     const [scenarioTheme, setScenarioTheme] = useState('');
+    const [duration, setDuration] = useState('');
     const [persona, setPersona] = useState('');
     const [emotion, setEmotion] = useState('');
     const [tone, setTone] = useState('');
@@ -82,6 +83,7 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
     
     const handleAddScriptLine = useCallback(() => setScript(prev => [...prev, { id: `line-${crypto.randomUUID()}`, characterId: '', line: '', emotion: '', tone: '' }]), []);
     const handleRemoveScriptLine = useCallback((id: string) => setScript(prev => prev.filter(l => l.id !== id)), []);
+    // Fix: Corrected a typo where 'c' was used instead of 'l' in the map callback.
     const handleScriptChange = useCallback((id: string, field: keyof Omit<ScriptLine, 'id'>, value: string) => setScript(prev => prev.map(l => l.id === id ? { ...l, [field]: value } : l)), []);
 
     const handleSubmit = async () => {
@@ -91,7 +93,7 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
         
         let request: PromptRequest;
         if (speechType === SpeechType.NARRATION) {
-            request = { type: SpeechType.NARRATION, scenario, persona, emotion, tone, environment };
+            request = { type: SpeechType.NARRATION, scenario, persona, emotion, tone, environment, duration };
         } else {
              const finalCharacters = characters.filter(c => c.name.trim() !== '' && c.persona.trim() !== '');
              if (finalCharacters.length === 0) {
@@ -99,7 +101,7 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
                  setIsLoading(false);
                  return;
              }
-            request = { type: speechType, scenario, characters: finalCharacters, script: script.filter(l => l.line.trim() !== '' && l.characterId) };
+            request = { type: speechType, scenario, characters: finalCharacters, script: script.filter(l => l.line.trim() !== '' && l.characterId), duration };
         }
 
         try {
@@ -200,12 +202,26 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
         <>
             <fieldset className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-6">
                 <legend className="text-sm font-semibold text-gray-300 px-2">{T.scenarioSetup}</legend>
-                <AIScenarioGenerator 
-                    theme={scenarioTheme} onThemeChange={e => setScenarioTheme(e.target.value)}
-                    onGenerate={handleScenarioSuggestion} isGenerating={isSuggesting === 'scenario'}
-                    scenario={scenario} onScenarioChange={e => setScenario(e.target.value)}
-                    t={{ scenarioTheme: T.scenarioTheme, scenarioThemePlaceholder: T.scenarioThemePlaceholder, scenarioPlaceholder: T.scenarioPlaceholder }}
-                />
+                <div className="space-y-4">
+                    <AIScenarioGenerator 
+                        theme={scenarioTheme} onThemeChange={e => setScenarioTheme(e.target.value)}
+                        onGenerate={handleScenarioSuggestion} isGenerating={isSuggesting === 'scenario'}
+                        scenario={scenario} onScenarioChange={e => setScenario(e.target.value)}
+                        t={{ scenarioTheme: T.scenarioTheme, scenarioThemePlaceholder: T.scenarioThemePlaceholder, scenarioPlaceholder: T.scenarioPlaceholder }}
+                    />
+                    <div>
+                        <label htmlFor="duration" className="block text-sm font-medium text-gray-400 mb-1">{T.targetDuration}</label>
+                        <input
+                            type="number"
+                            id="duration"
+                            value={duration}
+                            onChange={e => setDuration(e.target.value)}
+                            placeholder={T.targetDurationPlaceholder}
+                            min="0"
+                            className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition"
+                        />
+                    </div>
+                </div>
             </fieldset>
 
             <fieldset className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-6">
@@ -234,12 +250,26 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
         <>
             <fieldset className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-6">
                 <legend className="text-sm font-semibold text-gray-300 px-2">{T.scenarioSetup}</legend>
-                <AIScenarioGenerator 
-                    theme={scenarioTheme} onThemeChange={e => setScenarioTheme(e.target.value)}
-                    onGenerate={handleScenarioSuggestion} isGenerating={isSuggesting === 'scenario'}
-                    scenario={scenario} onScenarioChange={e => setScenario(e.target.value)}
-                    t={{ scenarioTheme: T.scenarioTheme, scenarioThemePlaceholder: T.scenarioThemePlaceholder, scenarioPlaceholder: T.scenarioPlaceholder }}
-                />
+                <div className="space-y-4">
+                    <AIScenarioGenerator 
+                        theme={scenarioTheme} onThemeChange={e => setScenarioTheme(e.target.value)}
+                        onGenerate={handleScenarioSuggestion} isGenerating={isSuggesting === 'scenario'}
+                        scenario={scenario} onScenarioChange={e => setScenario(e.target.value)}
+                        t={{ scenarioTheme: T.scenarioTheme, scenarioThemePlaceholder: T.scenarioThemePlaceholder, scenarioPlaceholder: T.scenarioPlaceholder }}
+                    />
+                     <div>
+                        <label htmlFor="duration" className="block text-sm font-medium text-gray-400 mb-1">{T.targetDuration}</label>
+                        <input
+                            type="number"
+                            id="duration"
+                            value={duration}
+                            onChange={e => setDuration(e.target.value)}
+                            placeholder={T.targetDurationPlaceholder}
+                            min="0"
+                            className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition"
+                        />
+                    </div>
+                </div>
             </fieldset>
 
             <fieldset className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-6">

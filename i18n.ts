@@ -42,6 +42,7 @@ export const UI_TEXT = {
     suggesting: "Suggesting...",
     errorScenarioNeeded: "Please provide a scenario first.",
     errorCharacterNeeded: "Please define at least one character.",
+    errorCharacterInfoNeeded: "Please enter the character's name and persona first.",
     errorUnexpected: "An unexpected error occurred.",
     errorSuggestion: "Failed to get suggestion.",
     geminiErrorPrefix: "Gemini API Error",
@@ -51,6 +52,8 @@ export const UI_TEXT = {
     narratorInfo: "Narrator Information",
     characterInfo: "Character Information",
     scriptEditor: "Script Editor",
+    imageTouchSuggestion: "AI Image Touch Suggestion",
+    imageTouchPlaceholder: "AI suggestions for cosplay performance will appear here...",
   },
   ko: {
     title: "AI 성우 프롬프트 생성기",
@@ -92,6 +95,7 @@ export const UI_TEXT = {
     suggesting: "추천 중...",
     errorScenarioNeeded: "먼저 시나리오를 입력해주세요.",
     errorCharacterNeeded: "최소 한 명 이상의 등장인물을 정의해주세요.",
+    errorCharacterInfoNeeded: "먼저 캐릭터의 이름과 페르소나를 입력해주세요.",
     errorUnexpected: "예상치 못한 오류가 발생했습니다.",
     errorSuggestion: "추천을 받아오지 못했습니다.",
     geminiErrorPrefix: "Gemini API 오류",
@@ -101,5 +105,7 @@ export const UI_TEXT = {
     narratorInfo: "나레이터 정보",
     characterInfo: "등장인물 정보",
     scriptEditor: "대본 편집기",
+    imageTouchSuggestion: "AI 이미지 터치 제안",
+    imageTouchPlaceholder: "코스프레 연기를 위한 AI 제안이 여기에 표시됩니다...",
   },
 };

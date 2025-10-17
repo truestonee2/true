@@ -9,6 +9,7 @@ export interface Character {
   id: string;
   name: string;
   persona: string;
+  imageTouch?: string;
 }
 
 export interface ScriptLine {

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { SpeechType, Character, ScriptLine, PromptRequest, GeneratedPrompt } from './types';
-import { generatePrompt, generateScenarioSuggestion, generateNarratorDetailsSuggestion } from './services/geminiService';
+import { generatePrompt, generateScenarioSuggestion, generateNarratorDetailsSuggestion, generateImageTouchSuggestion } from './services/geminiService';
 import { Language, UI_TEXT } from './i18n';
 import { PlusIcon, MinusIcon, CopyIcon, CheckIcon, SparklesIcon, RefreshIcon, LanguageIcon } from './components/icons';
 
@@ -57,8 +57,8 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
     const [tone, setTone] = useState('');
     const [environment, setEnvironment] = useState('');
     const [characters, setCharacters] = useState<Character[]>([
-        { id: `char-${crypto.randomUUID()}`, name: '', persona: '' },
-        { id: `char-${crypto.randomUUID()}`, name: '', persona: '' },
+        { id: `char-${crypto.randomUUID()}`, name: '', persona: '', imageTouch: '' },
+        { id: `char-${crypto.randomUUID()}`, name: '', persona: '', imageTouch: '' },
     ]);
     const [script, setScript] = useState<ScriptLine[]>([
         { id: `line-${crypto.randomUUID()}`, characterId: '', line: '', emotion: '', tone: '' }
@@ -71,13 +71,14 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
     const [copied, setCopied] = useState(false);
     const [jsonCopied, setJsonCopied] = useState(false);
     const [isSuggesting, setIsSuggesting] = useState< 'scenario' | 'details' | null>(null);
+    const [suggestingImageTouch, setSuggestingImageTouch] = useState<string | null>(null);
 
-    const handleAddCharacter = useCallback(() => setCharacters(prev => [...prev, { id: `char-${crypto.randomUUID()}`, name: '', persona: '' }]), []);
+    const handleAddCharacter = useCallback(() => setCharacters(prev => [...prev, { id: `char-${crypto.randomUUID()}`, name: '', persona: '', imageTouch: '' }]), []);
     const handleRemoveCharacter = useCallback((id: string) => {
         setCharacters(prev => prev.filter(c => c.id !== id));
         setScript(prev => prev.map(l => l.characterId === id ? { ...l, characterId: '' } : l));
     }, []);
-    const handleCharacterChange = useCallback((id: string, field: 'name' | 'persona', value: string) => setCharacters(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c)), []);
+    const handleCharacterChange = useCallback((id: string, field: keyof Omit<Character, 'id'>, value: string) => setCharacters(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c)), []);
     
     const handleAddScriptLine = useCallback(() => setScript(prev => [...prev, { id: `line-${crypto.randomUUID()}`, characterId: '', line: '', emotion: '', tone: '' }]), []);
     const handleRemoveScriptLine = useCallback((id: string) => setScript(prev => prev.filter(l => l.id !== id)), []);
@@ -139,6 +140,24 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
             setError(e.message || T.errorSuggestion);
         } finally {
             setIsSuggesting(null);
+        }
+    };
+
+    const handleImageTouchSuggestion = async (characterId: string) => {
+        const character = characters.find(c => c.id === characterId);
+        if (!character || !character.name.trim() || !character.persona.trim()) {
+            setError(T.errorCharacterInfoNeeded);
+            return;
+        }
+        setSuggestingImageTouch(characterId);
+        setError(null);
+        try {
+            const suggestion = await generateImageTouchSuggestion(character.name, character.persona, lang);
+            handleCharacterChange(characterId, 'imageTouch', suggestion);
+        } catch (e: any) {
+            setError(e.message || T.errorSuggestion);
+        } finally {
+            setSuggestingImageTouch(null);
         }
     };
 
@@ -229,9 +248,31 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
                     {characters.map((char, index) => (
                         <div key={char.id} className="flex items-start space-x-3 bg-gray-900/50 p-3 rounded-lg border border-gray-700">
                             <span className="text-gray-400 pt-2 font-medium">{index + 1}.</span>
-                            <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <input type="text" placeholder={T.characterName} value={char.name} onChange={e => handleCharacterChange(char.id, 'name', e.target.value)} className="block w-full rounded-lg border-gray-600 bg-gray-800 shadow-sm sm:text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition" />
-                                <textarea placeholder={T.characterPersona} value={char.persona} onChange={e => handleCharacterChange(char.id, 'persona', e.target.value)} rows={2} className="block w-full rounded-lg border-gray-600 bg-gray-800 shadow-sm sm:text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition" />
+                            <div className="flex-grow space-y-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <input type="text" placeholder={T.characterName} value={char.name} onChange={e => handleCharacterChange(char.id, 'name', e.target.value)} className="block w-full rounded-lg border-gray-600 bg-gray-800 shadow-sm sm:text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition" />
+                                    <textarea placeholder={T.characterPersona} value={char.persona} onChange={e => handleCharacterChange(char.id, 'persona', e.target.value)} rows={2} className="block w-full rounded-lg border-gray-600 bg-gray-800 shadow-sm sm:text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition" />
+                                </div>
+                                <div>
+                                    <div className="flex justify-end">
+                                        <button
+                                            onClick={() => handleImageTouchSuggestion(char.id)}
+                                            disabled={suggestingImageTouch === char.id || !char.name.trim() || !char.persona.trim()}
+                                            className="flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-medium text-teal-300 bg-teal-900/50 hover:bg-teal-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            aria-label={T.imageTouchSuggestion}
+                                        >
+                                            {suggestingImageTouch === char.id ? <RefreshIcon className="w-4 h-4 animate-spin" /> : <SparklesIcon className="w-4 h-4" />}
+                                            <span>{T.imageTouchSuggestion}</span>
+                                        </button>
+                                    </div>
+                                    <textarea
+                                        placeholder={T.imageTouchPlaceholder}
+                                        value={char.imageTouch || ''}
+                                        onChange={e => handleCharacterChange(char.id, 'imageTouch', e.target.value)}
+                                        rows={3}
+                                        className="mt-2 block w-full rounded-lg border-gray-600 bg-gray-800 shadow-sm sm:text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 placeholder:text-gray-500 transition"
+                                    />
+                                </div>
                             </div>
                             <button onClick={() => handleRemoveCharacter(char.id)} className="text-gray-500 hover:text-red-500 pt-1.5 transition-colors"><MinusIcon className="w-6 h-6"/></button>
                         </div>

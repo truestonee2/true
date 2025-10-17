@@ -190,3 +190,20 @@ export const generateNarratorDetailsSuggestion = async (scenario: string, lang: 
         throw new Error("Failed to generate narrator details.");
     }
 };
+
+export const generateImageTouchSuggestion = async (characterName: string, characterPersona: string, lang: Language): Promise<string> => {
+  try {
+    const prompt = lang === 'ko'
+      ? `캐릭터 이름 "${characterName}"(페르소나: ${characterPersona})에 대해, 세계적인 립싱크 전문가 코스플레이어가 연기한다고 가정하고 섬세한 '이미지 터치'를 제안해주세요. 여기에는 표정, 강조를 위한 주요 입 모양, 미묘한 제스처, 메이크업 디테일 등 연기를 향상시킬 구체적인 제안이 포함되어야 합니다.`
+      : `For a character named "${characterName}" with the persona "${characterPersona}", suggest some detailed 'image touches' assuming they are portrayed by a world-class lip-sync expert cosplayer. This should include specific suggestions for facial expressions, key lip shapes for emphasis, subtle gestures, and makeup details that would enhance their performance.`;
+
+    const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+    });
+    return response.text.trim();
+  } catch (error) {
+    console.error("Error generating image touch suggestion:", error);
+    throw new Error("Failed to generate image touch suggestion.");
+  }
+};

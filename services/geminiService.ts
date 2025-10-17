@@ -11,11 +11,11 @@ const NARRATION_SCHEMA = {
     type: { type: Type.STRING, description: "Should be 'narration'." },
     scenario: { type: Type.STRING, description: "A brief summary of the scene or context." },
     persona: { type: Type.STRING, description: "The personality or role of the narrator." },
-    content: { type: Type.STRING, description: "The full text of the narration." },
+    content: { type: Type.ARRAY, items: { type: Type.STRING }, description: "The full text of the narration, divided into sections as requested." },
     emotion: { type: Type.STRING, description: "The primary emotion to convey (e.g., 'Sad', 'Joyful', 'Tense')." },
     tones: { type: Type.ARRAY, items: { type: Type.STRING }, description: "A list of vocal tones or styles (e.g., 'Whispering', 'Booming', 'Fast-paced')." },
     environment: { type: Type.STRING, description: "The physical setting or acoustic environment for the narration (e.g., 'In a vast cave', 'Small room', 'Outdoors in a storm')." },
-    integrated_text: {type: Type.STRING, description: "A single string combining all elements into a comprehensive prompt for a text-to-speech engine, formatted for readability."}
+    integrated_text: {type: Type.STRING, description: "A single string combining all elements into a comprehensive prompt for a text-to-speech engine, formatted for readability with clear section breaks."}
   },
   required: ["type", "scenario", "persona", "content", "emotion", "tones", "environment", "integrated_text"],
 };
@@ -54,19 +54,28 @@ const DIALOGUE_SCHEMA = {
   required: ["type", "scenario", "characters", "script", "integrated_text"],
 };
 
-const SYSTEM_INSTRUCTION = `You are a master scriptwriter for 'cosplay' style voice acting and advanced text-to-speech generation. Your goal is to create vivid, emotionally-rich, and character-driven scenarios. You must generate a detailed prompt based on the user's specifications. The final output must be a single JSON object that strictly adheres to the provided schema. The 'integrated_text' field must be a complete, well-formatted string combining all information into a final, readable script or narration prompt.`;
+const SYSTEM_INSTRUCTION = `You are a master scriptwriter for 'cosplay' style voice acting and advanced text-to-speech generation. Your goal is to create vivid, emotionally-rich, and character-driven scenarios. You must generate a detailed prompt based on the user's specifications. The final output must be a single JSON object that strictly adheres to the provided schema. The 'integrated_text' field must be a complete, well-formatted string combining all information into a final, readable script or narration prompt. If the user requests the output to be divided into sections, you MUST follow that instruction precisely. For narration, the 'content' field must be an array of strings, with each string being a section. For dialogue, while the 'script' array remains a flat list of lines, the dialogue flow and the 'integrated_text' MUST be structured to reflect the requested number of sections, using clear headings (e.g., '[SECTION 1]', '[PART 2]') in the 'integrated_text'.`;
 
 export const generatePrompt = async (request: PromptRequest): Promise<GeneratedPrompt> => {
   let userPrompt: string;
   let schema: object;
   
-  const durationConstraint = (duration: string | undefined): string => {
-    if (!duration) return '';
-    const parsedDuration = parseInt(duration, 10);
+  const outputStructureConstraint = (duration: string | undefined, numberOfSections: string | undefined): string => {
+    let constraint = '';
+    const parsedDuration = duration ? parseInt(duration, 10) : NaN;
+    const parsedSections = numberOfSections ? parseInt(numberOfSections, 10) : NaN;
+
     if (!isNaN(parsedDuration) && parsedDuration > 0) {
-        return `\n- The total length should be approximately ${parsedDuration} seconds.`;
+        constraint += `\n- The total length should be approximately ${parsedDuration} seconds.`;
     }
-    return '';
+    if (!isNaN(parsedSections) && parsedSections > 0) {
+        constraint += `\n- The output MUST be divided into exactly ${parsedSections} distinct sections or parts.`;
+        if (!isNaN(parsedDuration) && parsedDuration > 0) {
+            const durationPerSection = (parsedDuration / parsedSections).toFixed(1);
+            constraint += ` Each section should be about ${durationPerSection} seconds long.`;
+        }
+    }
+    return constraint;
   };
 
   if (request.type === SpeechType.NARRATION) {
@@ -78,7 +87,7 @@ export const generatePrompt = async (request: PromptRequest): Promise<GeneratedP
       - Primary Emotion: ${r.emotion}
       - Vocal Tones: ${r.tone}
       - Environment: ${r.environment}
-      The narration should be descriptive, immersive, and set a clear mood based on these details. The environment should influence the tone and description.${durationConstraint(r.duration)}`;
+      The narration should be descriptive, immersive, and set a clear mood based on these details. The environment should influence the tone and description.${outputStructureConstraint(r.duration, r.numberOfSections)}`;
     schema = NARRATION_SCHEMA;
   } else {
     const r = request as DialogueRequest;
@@ -104,14 +113,14 @@ export const generatePrompt = async (request: PromptRequest): Promise<GeneratedP
           
           Your task is to take the provided script and format it perfectly into the required JSON structure.
           Refine the emotion and tone descriptions to be more evocative and detailed where appropriate, but strictly adhere to the dialogue lines and character assignments from the script.
-          The 'integrated_text' should be a clean, readable script format of the final dialogue.${durationConstraint(r.duration)}`;
+          The 'integrated_text' should be a clean, readable script format of the final dialogue.${outputStructureConstraint(r.duration, r.numberOfSections)}`;
     } else {
         userPrompt = `
           Generate a speech prompt for a dialogue.
           - Scenario: ${r.scenario}
           - Characters:\n${characterDescriptions}
           The dialogue should be dramatic and engaging. Each line in the script must have a specified character, the line of dialogue, a primary emotion, and a specific tone/direction.
-          Generate a complete script from scratch based on the scenario and characters provided.${durationConstraint(r.duration)}`;
+          Generate a complete script from scratch based on the scenario and characters provided.${outputStructureConstraint(r.duration, r.numberOfSections)}`;
     }
     schema = DIALOGUE_SCHEMA;
   }

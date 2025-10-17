@@ -28,6 +28,7 @@ export interface NarrationRequest {
   tone: string;
   environment: string;
   duration?: string;
+  numberOfSections?: string;
 }
 
 export interface DialogueRequest {
@@ -36,6 +37,7 @@ export interface DialogueRequest {
   characters: Character[];
   script: ScriptLine[];
   duration?: string;
+  numberOfSections?: string;
 }
 
 export type PromptRequest = NarrationRequest | DialogueRequest;

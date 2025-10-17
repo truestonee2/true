@@ -56,6 +56,8 @@ export const UI_TEXT = {
     imageTouchPlaceholder: "AI suggestions for cosplay performance will appear here...",
     targetDuration: "Target Duration (seconds)",
     targetDurationPlaceholder: "Optional, e.g., 30",
+    numberOfSections: "Number of Sections",
+    numberOfSectionsPlaceholder: "Optional, e.g., 5",
   },
   ko: {
     title: "AI 성우 프롬프트 생성기",
@@ -111,5 +113,7 @@ export const UI_TEXT = {
     imageTouchPlaceholder: "코스프레 연기를 위한 AI 제안이 여기에 표시됩니다...",
     targetDuration: "목표 시간 (초)",
     targetDurationPlaceholder: "선택사항, 예: 30",
+    numberOfSections: "구간 수",
+    numberOfSectionsPlaceholder: "선택사항, 예: 5",
   },
 };

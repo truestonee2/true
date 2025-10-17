@@ -53,6 +53,7 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
     const [scenario, setScenario] = useState('');
     const [scenarioTheme, setScenarioTheme] = useState('');
     const [duration, setDuration] = useState('');
+    const [numberOfSections, setNumberOfSections] = useState('');
     const [persona, setPersona] = useState('');
     const [emotion, setEmotion] = useState('');
     const [tone, setTone] = useState('');
@@ -93,7 +94,7 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
         
         let request: PromptRequest;
         if (speechType === SpeechType.NARRATION) {
-            request = { type: SpeechType.NARRATION, scenario, persona, emotion, tone, environment, duration };
+            request = { type: SpeechType.NARRATION, scenario, persona, emotion, tone, environment, duration, numberOfSections };
         } else {
              const finalCharacters = characters.filter(c => c.name.trim() !== '' && c.persona.trim() !== '');
              if (finalCharacters.length === 0) {
@@ -101,7 +102,7 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
                  setIsLoading(false);
                  return;
              }
-            request = { type: speechType, scenario, characters: finalCharacters, script: script.filter(l => l.line.trim() !== '' && l.characterId), duration };
+            request = { type: speechType, scenario, characters: finalCharacters, script: script.filter(l => l.line.trim() !== '' && l.characterId), duration, numberOfSections };
         }
 
         try {
@@ -209,17 +210,31 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
                         scenario={scenario} onScenarioChange={e => setScenario(e.target.value)}
                         t={{ scenarioTheme: T.scenarioTheme, scenarioThemePlaceholder: T.scenarioThemePlaceholder, scenarioPlaceholder: T.scenarioPlaceholder }}
                     />
-                    <div>
-                        <label htmlFor="duration" className="block text-sm font-medium text-gray-400 mb-1">{T.targetDuration}</label>
-                        <input
-                            type="number"
-                            id="duration"
-                            value={duration}
-                            onChange={e => setDuration(e.target.value)}
-                            placeholder={T.targetDurationPlaceholder}
-                            min="0"
-                            className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition"
-                        />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="duration" className="block text-sm font-medium text-gray-400 mb-1">{T.targetDuration}</label>
+                            <input
+                                type="number"
+                                id="duration"
+                                value={duration}
+                                onChange={e => setDuration(e.target.value)}
+                                placeholder={T.targetDurationPlaceholder}
+                                min="0"
+                                className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition"
+                            />
+                        </div>
+                         <div>
+                            <label htmlFor="sections" className="block text-sm font-medium text-gray-400 mb-1">{T.numberOfSections}</label>
+                            <input
+                                type="number"
+                                id="sections"
+                                value={numberOfSections}
+                                onChange={e => setNumberOfSections(e.target.value)}
+                                placeholder={T.numberOfSectionsPlaceholder}
+                                min="0"
+                                className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition"
+                            />
+                        </div>
                     </div>
                 </div>
             </fieldset>
@@ -257,17 +272,31 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
                         scenario={scenario} onScenarioChange={e => setScenario(e.target.value)}
                         t={{ scenarioTheme: T.scenarioTheme, scenarioThemePlaceholder: T.scenarioThemePlaceholder, scenarioPlaceholder: T.scenarioPlaceholder }}
                     />
-                     <div>
-                        <label htmlFor="duration" className="block text-sm font-medium text-gray-400 mb-1">{T.targetDuration}</label>
-                        <input
-                            type="number"
-                            id="duration"
-                            value={duration}
-                            onChange={e => setDuration(e.target.value)}
-                            placeholder={T.targetDurationPlaceholder}
-                            min="0"
-                            className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition"
-                        />
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="duration" className="block text-sm font-medium text-gray-400 mb-1">{T.targetDuration}</label>
+                            <input
+                                type="number"
+                                id="duration"
+                                value={duration}
+                                onChange={e => setDuration(e.target.value)}
+                                placeholder={T.targetDurationPlaceholder}
+                                min="0"
+                                className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition"
+                            />
+                        </div>
+                         <div>
+                            <label htmlFor="sections" className="block text-sm font-medium text-gray-400 mb-1">{T.numberOfSections}</label>
+                            <input
+                                type="number"
+                                id="sections"
+                                value={numberOfSections}
+                                onChange={e => setNumberOfSections(e.target.value)}
+                                placeholder={T.numberOfSectionsPlaceholder}
+                                min="0"
+                                className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition"
+                            />
+                        </div>
                     </div>
                 </div>
             </fieldset>

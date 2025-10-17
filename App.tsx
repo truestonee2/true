@@ -46,6 +46,134 @@ const AIScenarioGenerator: React.FC<{
     </div>
 );
 
+const StructuredOutputViewer: React.FC<{ prompts: GeneratedPrompt[], T: typeof UI_TEXT['en'] }> = ({ prompts, T }) => {
+    const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
+
+    const handleCopy = (text: string, id: string) => {
+        navigator.clipboard.writeText(text);
+        setCopiedStates(prev => ({ ...prev, [id]: true }));
+        setTimeout(() => {
+            setCopiedStates(prev => ({ ...prev, [id]: false }));
+        }, 2000);
+    };
+
+    if (!prompts || prompts.length === 0) return null;
+
+    const fullIntegratedText = useMemo(() => prompts.map(p => p.integrated).join('\n\n'), [prompts]);
+    const fullIntegratedId = 'full-integrated-text';
+
+    return (
+        <div className="space-y-6">
+            {/* Full Script View */}
+            <div>
+                <h3 className="font-semibold text-sm text-gray-400 select-none mb-2 px-1">{T.fullScript}</h3>
+                <div className="relative group bg-black/30 p-4 rounded-lg ring-1 ring-gray-700/50">
+                    <button
+                        onClick={() => handleCopy(fullIntegratedText, fullIntegratedId)}
+                        aria-label={T.copyPrompt}
+                        className="p-1.5 bg-gray-700/80 rounded-md hover:bg-gray-600 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 absolute top-2 right-2"
+                    >
+                        {copiedStates[fullIntegratedId] ? <CheckIcon className="text-green-400 w-4 h-4" /> : <CopyIcon className="text-gray-300 w-4 h-4"/>}
+                    </button>
+                    <pre className="text-teal-100 overflow-x-auto text-sm whitespace-pre-wrap font-mono">
+                        {fullIntegratedText}
+                    </pre>
+                </div>
+            </div>
+            
+            {/* Section-by-Section View */}
+            {prompts.length > 1 && (
+                <div>
+                    <h3 className="font-semibold text-sm text-gray-400 select-none mb-2 px-1">{T.narrationSections}</h3>
+                    <div className="space-y-3">
+                        {prompts.map((prompt, index) => {
+                            const sectionId = `section-integrated-${index}`;
+                            return (
+                                <div key={sectionId} className="relative group bg-black/30 p-4 rounded-lg ring-1 ring-gray-700/50">
+                                    <button
+                                        onClick={() => handleCopy(prompt.integrated, sectionId)}
+                                        aria-label={`${T.copySection} ${index + 1}`}
+                                        className="p-1.5 bg-gray-700/80 rounded-md hover:bg-gray-600 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 absolute top-2 right-2"
+                                    >
+                                        {copiedStates[sectionId] ? <CheckIcon className="text-green-400 w-4 h-4" /> : <CopyIcon className="text-gray-300 w-4 h-4"/>}
+                                    </button>
+                                    <pre className="text-teal-100 overflow-x-auto text-sm whitespace-pre-wrap font-mono">
+                                        {prompt.integrated}
+                                    </pre>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+const StructuredJsonViewer: React.FC<{ prompts: GeneratedPrompt[]; T: typeof UI_TEXT['en'] }> = ({ prompts, T }) => {
+    const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
+
+    const handleCopy = (text: string, id: string) => {
+        navigator.clipboard.writeText(text);
+        setCopiedStates(prev => ({ ...prev, [id]: true }));
+        setTimeout(() => {
+            setCopiedStates(prev => ({ ...prev, [id]: false }));
+        }, 2000);
+    };
+
+    if (!prompts || prompts.length === 0) return null;
+
+    const fullJsonArrayText = useMemo(() => JSON.stringify(prompts.map(p => p.json), null, 2), [prompts]);
+    const fullJsonId = 'json-full-array';
+
+    return (
+        <div className="space-y-4 mt-2 p-2">
+            {/* Full JSON Array View */}
+            <div className="relative group bg-black/30 p-3 rounded-lg ring-1 ring-gray-700/50">
+                 <div className="flex justify-between items-center mb-1">
+                    <h3 className="font-semibold text-xs text-gray-400 select-none">{T.fullJsonArray}</h3>
+                    <button 
+                        onClick={() => handleCopy(fullJsonArrayText, fullJsonId)}
+                        aria-label={T.copyJson}
+                        className="p-1.5 bg-gray-700/80 rounded-md hover:bg-gray-600 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                    >
+                        {copiedStates[fullJsonId] ? <CheckIcon className="text-green-400 w-4 h-4" /> : <CopyIcon className="text-gray-300 w-4 h-4"/>}
+                    </button>
+                 </div>
+                 <pre className="text-xs text-gray-300 whitespace-pre-wrap font-mono">{fullJsonArrayText}</pre>
+            </div>
+            
+            {/* Section-by-Section JSON Object View */}
+            {prompts.length > 1 && (
+                 <div className="space-y-2">
+                     <h3 className="font-semibold text-xs text-gray-400 mt-3 mb-1 select-none pl-1">{T.jsonBySection}</h3>
+                     {prompts.map((prompt, index) => {
+                         const sectionId = `json-section-obj-${index}`;
+                         const sectionJsonText = JSON.stringify(prompt.json, null, 2);
+                         return (
+                            <div key={sectionId} className="relative group bg-black/30 p-3 rounded-lg ring-1 ring-gray-700/50">
+                                <div className="flex justify-between items-center mb-1">
+                                    <h4 className="font-semibold text-xs text-gray-500 select-none">{T.jsonObjectForSection.replace('{num}', String(index + 1))}</h4>
+                                    <button 
+                                        onClick={() => handleCopy(sectionJsonText, sectionId)} 
+                                        aria-label={`${T.copyJson} for Section ${index + 1}`}
+                                        className="p-1.5 bg-gray-700/80 rounded-md hover:bg-gray-600 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                    >
+                                         {copiedStates[sectionId] ? <CheckIcon className="text-green-400 w-4 h-4" /> : <CopyIcon className="text-gray-300 w-4 h-4"/>}
+                                    </button>
+                                </div>
+                                <pre className="text-xs text-gray-300 whitespace-pre-wrap font-mono">{sectionJsonText}</pre>
+                            </div>
+                         );
+                     })}
+                </div>
+            )}
+        </div>
+    );
+};
+
+
 const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lang, T }) => {
     const [speechType, setSpeechType] = useState<SpeechType>(SpeechType.NARRATION);
     
@@ -67,11 +195,9 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
     ]);
 
     // UI State
-    const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
+    const [generatedPrompts, setGeneratedPrompts] = useState<GeneratedPrompt[] | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [copied, setCopied] = useState(false);
-    const [jsonCopied, setJsonCopied] = useState(false);
     const [isSuggesting, setIsSuggesting] = useState< 'scenario' | 'details' | null>(null);
     const [suggestingImageTouch, setSuggestingImageTouch] = useState<string | null>(null);
 
@@ -84,13 +210,12 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
     
     const handleAddScriptLine = useCallback(() => setScript(prev => [...prev, { id: `line-${crypto.randomUUID()}`, characterId: '', line: '', emotion: '', tone: '' }]), []);
     const handleRemoveScriptLine = useCallback((id: string) => setScript(prev => prev.filter(l => l.id !== id)), []);
-    // Fix: Corrected a typo where 'c' was used instead of 'l' in the map callback.
     const handleScriptChange = useCallback((id: string, field: keyof Omit<ScriptLine, 'id'>, value: string) => setScript(prev => prev.map(l => l.id === id ? { ...l, [field]: value } : l)), []);
 
     const handleSubmit = async () => {
         setIsLoading(true);
         setError(null);
-        setGeneratedPrompt(null);
+        setGeneratedPrompts(null);
         
         let request: PromptRequest;
         if (speechType === SpeechType.NARRATION) {
@@ -106,8 +231,8 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
         }
 
         try {
-            const result = await generatePrompt(request);
-            setGeneratedPrompt(result);
+            const results = await generatePrompt(request);
+            setGeneratedPrompts(results);
         } catch (e: any) {
             setError(e.message || T.errorUnexpected);
         } finally {
@@ -164,22 +289,6 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
         }
     };
 
-    const handleCopyToClipboard = () => {
-        if (generatedPrompt) {
-            navigator.clipboard.writeText(generatedPrompt.integrated);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        }
-    };
-
-    const handleCopyJsonToClipboard = () => {
-        if (generatedPrompt) {
-            navigator.clipboard.writeText(JSON.stringify(generatedPrompt.json, null, 2));
-            setJsonCopied(true);
-            setTimeout(() => setJsonCopied(false), 2000);
-        }
-    };
-
     const prettyErrorMessage = useMemo(() => {
         if (!error) return null;
 
@@ -231,7 +340,7 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
                                 value={numberOfSections}
                                 onChange={e => setNumberOfSections(e.target.value)}
                                 placeholder={T.numberOfSectionsPlaceholder}
-                                min="0"
+                                min="1"
                                 className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition"
                             />
                         </div>
@@ -242,10 +351,22 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
             <fieldset className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-6">
                 <legend className="text-sm font-semibold text-gray-300 px-2">{T.narratorInfo}</legend>
                 <div className="space-y-4">
-                    <textarea placeholder={T.personaPlaceholder} value={persona} onChange={e => setPersona(e.target.value)} rows={2} className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition" />
-                    <textarea placeholder={T.emotionPlaceholder} value={emotion} onChange={e => setEmotion(e.target.value)} rows={2} className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition" />
-                    <textarea placeholder={T.narratorEnvironmentPlaceholder} value={environment} onChange={e => setEnvironment(e.target.value)} rows={2} className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition" />
-                    <textarea placeholder={T.tonePlaceholder} value={tone} onChange={e => setTone(e.target.value)} rows={2} className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition" />
+                    <div>
+                        <label htmlFor="persona" className="block text-sm font-medium text-gray-400 mb-1">{T.personaLabel}</label>
+                        <textarea id="persona" placeholder={T.personaPlaceholder} value={persona} onChange={e => setPersona(e.target.value)} rows={2} className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition" />
+                    </div>
+                    <div>
+                        <label htmlFor="emotion" className="block text-sm font-medium text-gray-400 mb-1">{T.emotionLabel}</label>
+                        <textarea id="emotion" placeholder={T.emotionPlaceholder} value={emotion} onChange={e => setEmotion(e.target.value)} rows={2} className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition" />
+                    </div>
+                     <div>
+                        <label htmlFor="environment" className="block text-sm font-medium text-gray-400 mb-1">{T.environmentLabel}</label>
+                        <textarea id="environment" placeholder={T.narratorEnvironmentPlaceholder} value={environment} onChange={e => setEnvironment(e.target.value)} rows={2} className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition" />
+                    </div>
+                    <div>
+                        <label htmlFor="tone" className="block text-sm font-medium text-gray-400 mb-1">{T.toneLabel}</label>
+                        <textarea id="tone" placeholder={T.tonePlaceholder} value={tone} onChange={e => setTone(e.target.value)} rows={2} className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition" />
+                    </div>
                 </div>
                 <div className="flex justify-end mt-4">
                     <button 
@@ -293,7 +414,7 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
                                 value={numberOfSections}
                                 onChange={e => setNumberOfSections(e.target.value)}
                                 placeholder={T.numberOfSectionsPlaceholder}
-                                min="0"
+                                min="1"
                                 className="block w-full rounded-lg border-gray-600 bg-gray-900 shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 sm:text-sm placeholder:text-gray-500 transition"
                             />
                         </div>
@@ -394,27 +515,13 @@ const AppContent: React.FC<{ lang: Language; T: typeof UI_TEXT['en'] }> = ({ lan
                     <div className="bg-gray-800/30 border border-gray-700/50 rounded-xl min-h-[300px]">
                         {isLoading && <div className="flex justify-center items-center h-full p-10"><RefreshIcon className="w-10 h-10 mx-auto animate-spin text-teal-500" /></div>}
                         {error && <div className="m-4 bg-red-900/50 border border-red-700/50 text-red-300 px-4 py-3 rounded-lg" role="alert">{prettyErrorMessage}</div>}
-                        {generatedPrompt && (
+                        {generatedPrompts && (
                             <div className="space-y-4 p-4">
-                                <div className="relative group">
-                                    <pre className="bg-black/30 text-teal-100 p-4 rounded-lg overflow-x-auto text-sm whitespace-pre-wrap font-mono ring-1 ring-gray-700/50">
-                                        {generatedPrompt.integrated}
-                                    </pre>
-                                    <button onClick={handleCopyToClipboard} aria-label={T.copyPrompt} className="absolute top-2 right-2 p-1.5 bg-gray-700 rounded-md hover:bg-gray-600 transition-all opacity-0 group-hover:opacity-100">
-                                        {copied ? <CheckIcon className="text-green-400 w-4 h-4" /> : <CopyIcon className="text-gray-300 w-4 h-4"/>}
-                                    </button>
-                                </div>
-                                <div className="relative group">
-                                    <details className="bg-black/20 p-2 rounded-lg border border-gray-700/50">
-                                        <summary className="cursor-pointer text-sm font-medium text-gray-400 hover:text-gray-200 p-1 transition-colors">{T.viewJson}</summary>
-                                        <pre className="mt-2 p-4 rounded-md overflow-x-auto text-xs text-gray-300 whitespace-pre-wrap font-mono">
-                                            {JSON.stringify(generatedPrompt.json, null, 2)}
-                                        </pre>
-                                    </details>
-                                    <button onClick={handleCopyJsonToClipboard} aria-label={T.copyJson} className="absolute top-1 right-2 p-1.5 bg-gray-700 rounded-md hover:bg-gray-600 transition-all opacity-0 group-hover:opacity-100">
-                                        {jsonCopied ? <CheckIcon className="text-green-400 w-4 h-4" /> : <CopyIcon className="text-gray-300 w-4 h-4"/>}
-                                    </button>
-                                </div>
+                                <StructuredOutputViewer prompts={generatedPrompts} T={T} />
+                                <details className="bg-black/20 p-2 rounded-lg border border-gray-700/50">
+                                    <summary className="cursor-pointer text-sm font-medium text-gray-400 hover:text-gray-200 p-1 transition-colors">{T.viewJson}</summary>
+                                    <StructuredJsonViewer prompts={generatedPrompts} T={T} />
+                                </details>
                             </div>
                         )}
                     </div>

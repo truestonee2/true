@@ -55,9 +55,9 @@ const DIALOGUE_SCHEMA = {
   required: ["type", "scenario", "characters", "script", "integrated_text"],
 };
 
-const SYSTEM_INSTRUCTION = `You are a master scriptwriter for 'cosplay' style voice acting and advanced text-to-speech generation. Your goal is to create vivid, emotionally-rich, and character-driven scenarios. 
+const SYSTEM_INSTRUCTION = `You are a master scriptwriter for 'cosplay' style voice acting and advanced text-to-speech generation. Your goal is to create vivid, emotionally-rich, and character-driven scenarios that progress over time.
 - If the user requests a single section (or does not specify), you must generate a single, detailed JSON object that strictly adheres to the provided schema.
-- If the user requests MULTIPLE sections, you MUST generate a JSON ARRAY where each element is a complete, independent JSON object for that specific section. Each object in the array must strictly adhere to the provided schema.
+- If the user requests MULTIPLE sections, you MUST generate a JSON ARRAY where each element is a complete, independent JSON object for that specific section. Each object in the array must represent a DIFFERENT and SEQUENTIAL part of the overall story or narration. The content must evolve from one section to the next. Do not repeat content between sections.
 - The 'integrated_text' field in each JSON object must be a complete, well-formatted string for THAT SECTION, combining all necessary information into a final, readable script or narration prompt.
 - For multi-section dialogues, the 'script' array within each JSON object should contain only the lines for that particular section. Structure the dialogue flow and the 'integrated_text' to reflect the requested number of sections, using clear headings (e.g., '[SECTION 1]', '[PART 2]') in the 'integrated_text'.`;
 
@@ -75,7 +75,7 @@ export const generatePrompt = async (request: PromptRequest): Promise<GeneratedP
         constraint += `\n- The total length of the entire performance should be approximately ${parsedDuration} seconds.`;
     }
     if (parsedSections > 1) {
-        constraint += `\n- The output MUST be divided into exactly ${parsedSections} distinct sections. Generate a JSON ARRAY with ${parsedSections} elements.`;
+        constraint += `\n- The output MUST be divided into exactly ${parsedSections} distinct sections. Generate a JSON ARRAY with ${parsedSections} elements where each element represents a sequential part of the story. Ensure the content progresses logically from one section to the next and is not repetitive.`;
         if (!isNaN(parsedDuration) && parsedDuration > 0) {
             const durationPerSection = (parsedDuration / parsedSections).toFixed(1);
             constraint += ` Each section should be about ${durationPerSection} seconds long.`;
